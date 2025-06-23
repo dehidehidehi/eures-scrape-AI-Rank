@@ -1,0 +1,13 @@
+<!doctype html>
+<html>
+<head><title>Database Stats</title></head>
+<body>
+    <h1>Stats</h1>
+    <ul>
+        <li>Total Jobs: {{ total }}</li>
+        <li>Average Score: {{ avg_score }}</li>
+        <li>Average OpenAI Score: {{ avg_openai }}</li>
+    </ul>
+    <p><a href="{{ url_for('index') }}">Back to search</a></p>
+</body>
+</html>

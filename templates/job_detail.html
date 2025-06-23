@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+<head>
+    <title>Job {{ job.get('title', '') }}</title>
+</head>
+<body>
+    <h1>{{ job.get('title', '') }}</h1>
+    <h2>Main Job Info</h2>
+    <pre>{{ job | tojson(indent=2) }}</pre>
+
+    <h2>AI Matching Data (jobs_data)</h2>
+    <pre>{{ job_data | tojson(indent=2) }}</pre>
+
+    <h2>Matching Score (job_matched)</h2>
+    <pre>{{ job_match | tojson(indent=2) }}</pre>
+
+    <p><a href="{{ url_for('index') }}">Back to search</a></p>
+</body>
+</html>

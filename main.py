@@ -9,12 +9,22 @@ from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.chrome.options import Options
 import requests
 import sqlite3
+import configparser
 
+def load_config(config_path="config.ini"):
+    config = configparser.ConfigParser()
+    config.read(config_path)
+    return {
+        "db_path": config.get("Paths", "DB_PATH", fallback="jobs_data.db"),
+        "cookie_file": config.get("Paths", "COOKIE_FILE", fallback="cookiefile.json"),
+        "xsrf_file": config.get("Paths", "XSRF_FILE", fallback="xsrf_token.txt"),
+        "job_title": config.get("EXTRA", "TARGET")
+    }
 # Constants
-COOKIE_FILE = Path("cookiefile.json")
-XSRF_FILE = Path("xsrf_token.txt")
-DB_PATH = "jobs_data.db"
-job_title = "head of engineering"
+COOKIE_FILE = Path(load_config().get("cookie_file", "cookiefile.json"))
+XSRF_FILE = Path(load_config().get("xsrf_file", "xsrf_token.txt"))
+DB_PATH = Path(load_config().get("db_path", "jobs_data.db"))
+job_title = load_config().get("job_title", "head of engineering")
 TARGET_PAGE = (
     "https://europa.eu/eures/portal/jv-se/search?"
     "page=1&resultsPerPage=10&orderBy=BEST_MATCH"
@@ -165,6 +175,7 @@ def make_api_request(cookie: str, xsrf_token: str, page: int = 1) -> tuple[dict,
     return response.json(), cookie, xsrf_token
 
 def get_job_details(job_id: str, cookie: str, xsrf_token: str) -> dict | None:
+
     url = f"https://europa.eu/eures/eures-apps/searchengine/page/jv/id/{job_id}?lang=en"
     headers = {
         "User-Agent": "Mozilla/5.0",
@@ -200,6 +211,9 @@ def handle_pagination(cookie: str, xsrf_token: str, conn):
         jobs = response.get("jvs", [])
 
         for job in jobs:
+            if cursor.execute("SELECT 1 FROM jobs WHERE id = ?", (job.get("id"),)).fetchone():
+                print(f"🔄 Skipping job ID {job.get('id')} (already exists).")
+                continue
             job_data = {
                 "id": job.get("id"),
                 "creationDate": job.get("creationDate"),

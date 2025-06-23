@@ -1,59 +1,161 @@
-# EURES Job Scraper
+# EURES Job Scraper, AI Matcher & Web Viewer
 
-This Python script automates the process of scraping job postings from the EURES portal and storing them in a local SQLite database. It uses Selenium for cookie extraction, requests for API communication, and SQLite for data storage.
+This Python-based system automates scraping job listings from the EURES portal, stores them in SQLite, matches them against a candidate’s resume using advanced AI models (OpenAI, Google Gemini, LLaMA), and provides a **Flask web app** to explore and filter matched jobs.
 
-## Features
+---
 
-- **Job Search Automation**: Fetches job postings based on predefined search criteria.
-- **Cookie Management**: Automatically handles cookies and XSRF tokens for authenticated API requests.
-- **Pagination Handling**: Supports fetching multiple pages of job postings.
-- **Data Storage**: Saves job postings and their details in a local SQLite database.
-- **Error Handling**: Automatically refreshes cookies and retries requests when tokens expire.
+## 🚀 Features
 
-## Prerequisites
+### ✅ Job Scraping & Storage
 
-1. **Python 3.9+**: Ensure Python is installed on your system.
-2. **Google Chrome**: The script uses Chrome for Selenium-based cookie extraction.
-3. **ChromeDriver**: Download the appropriate version of ChromeDriver for your Chrome version.
-4. **Python Libraries**: Install the required libraries using the command below.
+* Scrapes job listings from the **EURES portal**.
+* Manages cookies and XSRF tokens automatically.
+* Handles **pagination** to fetch all jobs.
+* Saves structured job data to a **SQLite database**.
 
-## Installation
+### 📄 Resume Matching
 
-1. Clone this repository or copy the script to your local machine.
-2. Install uv to manage Python dependencies:
-    ```bash
-    pip install uv
-    ```
-3. Place the `chromedriver` executable in your system's PATH or in the same directory as the script.
+* Extracts text from resume PDFs.
+* Matches resume to jobs using a **semantic embedding model**.
+* Produces top N matches.
 
-## Usage
+### 🤖 AI Reranking
 
-1. Update the `job_title` variable in the script to specify the job title you want to search for.
-2. Run the script:
-    ```bash
-    uv run main.py
-    ```
-3. The script will:
-    - Fetch job postings from the EURES portal.
-    - Save the job data in a SQLite database (`jobs_data.db`).
+Rerank top job matches using LLMs:
 
-## Files
+* **LLaMA CPP** (local): Efficient binary prompt reranking.
+* **Google Gemini 2.5 Flash**: Fast and detailed job-to-resume evaluation.
 
-- **`main.py`**: The main script containing all the logic.
-- **`cookiefile.json`**: Stores the session cookie for API requests.
-- **`xsrf_token.txt`**: Stores the XSRF token for API requests.
-- **`jobs_data.db`**: SQLite database where job postings are stored.
+Each AI model provides:
 
-## Configuration
+* Match score (1–10)
+* Justification for score
+* Extracted contact person/email
+* Draft email for application
 
-- **Search Criteria**: Modify the `TARGET_PAGE` URL and `make_api_request` payload to customize the search criteria (e.g., location, keywords, etc.).
-- **Database Schema**: The database schema can be updated in the `setup_database` function.
+### 🌐 Flask Web App
 
-## Troubleshooting
+* **Paginated UI**: Browse all jobs and matched jobs.
+* **Job Detail Page**: View full job details with match scores and AI-generated metadata.
+* **Filtering**: Filter jobs by location and other fields.
+* **Sorted View**: Display top matched jobs sorted by reranked score.
 
-- **403 Forbidden Errors**: If you encounter frequent 403 errors, ensure that the cookies and XSRF token are being correctly extracted and saved.
-- **Selenium Issues**: Ensure that ChromeDriver is compatible with your Chrome version and is correctly installed.
+---
 
-## License
+## 🗂 Directory Structure
 
-This project is licensed under the MIT License.
+```bash
+├── main.py                   # EURES job scraper entrypoint
+├── rank_llama_cpp.py         # AI matching & reranking logic
+├── app.py                    # Flask web app
+├── templates/
+│   ├── index.html            # Job list view
+│   └── detail.html           # Single job view
+├── static/                   # CSS/JS assets (if any)
+├── config.ini                # Paths and settings
+├── jobs_data.db              # SQLite database
+├── resume.pdf                # Resume file for matching
+```
+
+---
+
+## ⚙ Configuration
+
+`config.ini` example:
+
+```ini
+[Paths]
+DB_PATH=jobs_data.db
+RESUME_PDF_PATH=resume.pdf
+LLAMA_ENDPOINT=http://localhost:8090
+
+[Settings]
+TOP_N_MATCHES=10
+FINAL_TOP_N=3
+N_PREDICT=32
+
+[Models]
+SBERT_MODEL_NAME=all-MiniLM-L6-v2
+LLAMA_MODEL_PATH=path/to/llama/model
+; OPENAI_MODEL=gemini-2.5-flash
+OPENAI_MODEL=gemma-3-27b-it
+
+[API]
+OPENAI_API_KEY=your_openai_api_key
+
+[EXTRA]
+NAME= Your Name
+TARGET= Desired Job Title
+
+```
+
+---
+
+## 💻 Installation
+
+1. Install Python dependencies:
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+2. Install ChromeDriver and place it in your PATH.
+
+3. (Optional) Install `uv` if using it for running:
+
+   ```bash
+   pip install uv
+   ```
+
+---
+
+## 🧪 Usage
+
+### Scrape Jobs
+
+```bash
+uv run main.py
+```
+
+### Match and Rerank (Example)
+
+```python
+uv run rank_llama_cpp.py
+```
+
+### Launch Web App
+
+```bash
+uv run app.py
+```
+
+Then open [http://127.0.0.1:5000](http://127.0.0.1:5000) in your browser.
+
+---
+
+## 🔍 Web App Features
+
+* `/`: View all scraped jobs (paginated).
+* `/job/<id>`: View full job details, including:
+
+  * Description
+  * AI score
+  * Justification
+  * Contact person/email
+  * Email draft
+
+---
+
+## 🔧 Troubleshooting
+
+* **403 Errors**: Clear `cookiefile.json` and `xsrf_token.txt` and retry.
+* **Selenium issues**: Ensure ChromeDriver matches your Chrome version.
+* **LLaMA model path errors**: Double-check model and server paths for local models.
+
+---
+
+## 📜 License
+
+MIT License. Use, fork, extend freely.
+
+---
