@@ -28,7 +28,7 @@ job_title = load_config().get("job_title", "head of engineering")
 TARGET_PAGE = (
     "https://europa.eu/eures/portal/jv-se/search?"
     "page=1&resultsPerPage=10&orderBy=BEST_MATCH"
-    "&locationCodes=be,dk,fi,mt,nl,no,se,ch,ee"
+    "&locationCodes=at,be,dk,ee,fi,fr,de,is,ie,it,li,lu,mt,nl,no,es,ch,s"
     f"&keywordsEverywhere={job_title.replace(' ', '%20')}"
     "&positionScheduleCodes=fulltime"
     "&sector=NS,j,k"
