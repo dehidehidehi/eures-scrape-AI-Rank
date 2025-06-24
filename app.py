@@ -9,15 +9,13 @@ def load_config(config_path="config.ini"):
     config.read(config_path)
     return {
         "db_path": config.get("Paths", "DB_PATH", fallback="jobs_data.db"),
-        "cookie_file": config.get("Paths", "COOKIE_FILE", fallback="cookiefile.json"),
-        "xsrf_file": config.get("Paths", "XSRF_FILE", fallback="xsrf_token.txt"),
-        "job_title": config.get("Settings", "TARGET")
     }
 app = Flask(__name__)
 
 
 DATABASE = load_config().get("db_path", "jobs_data.db")
 
+print(f"Using database: {DATABASE}")
 def get_db():
     if 'db' not in g:
         g.db = sqlite3.connect(DATABASE)

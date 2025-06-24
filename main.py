@@ -18,7 +18,7 @@ def load_config(config_path="config.ini"):
         "db_path": config.get("Paths", "DB_PATH", fallback="jobs_data.db"),
         "cookie_file": config.get("Paths", "COOKIE_FILE", fallback="cookiefile.json"),
         "xsrf_file": config.get("Paths", "XSRF_FILE", fallback="xsrf_token.txt"),
-        "job_title": config.get("EXTRA", "TARGET")
+        "job_title": config.get("Extra", "TARGET")
     }
 # Constants
 COOKIE_FILE = Path(load_config().get("cookie_file", "cookiefile.json"))
