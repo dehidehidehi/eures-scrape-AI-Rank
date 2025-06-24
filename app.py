@@ -74,7 +74,7 @@ def job_detail(job_id):
     job_dict = dict(job) if job else {}
     job_data_dict = dict(job_data) if job_data else {}
     job_match_dict = dict(job_match) if job_match else {}
-    job_dict["Nav"] = f'<a href="https://europa.eu/eures/portal/jv-se/jv-details/{job_id}?lang=en" target="_blank">View Job</a>'
+    job_dict["Nav"] = f"https://europa.eu/eures/portal/jv-se/jv-details/{job_id}?lang=en"
     if "match_score" in job_match_dict:
         job_dict["score"] = job_match_dict["match_score"]
 
