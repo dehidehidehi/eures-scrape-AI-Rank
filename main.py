@@ -31,7 +31,6 @@ TARGET_PAGE = (
     "&locationCodes=at,be,dk,ee,fi,fr,de,is,ie,it,li,lu,mt,nl,no,es,ch,s"
     f"&keywordsEverywhere={job_title.replace(' ', '%20')}"
     "&positionScheduleCodes=fulltime"
-    "&sector=NS,j,k"
     "&positionOfferingCodes=NS,directhire"
     "&publicationPeriod=LAST_WEEK"
     "&escoIsco=C11,C12,C133,C242,C243,C25,C35"
