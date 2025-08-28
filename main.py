@@ -28,13 +28,10 @@ job_title = load_config().get("job_title", "head of engineering")
 TARGET_PAGE = (
     "https://europa.eu/eures/portal/jv-se/search?"
     "page=1&resultsPerPage=10&orderBy=BEST_MATCH"
-    "&locationCodes=at,be,dk,ee,fi,fr,de,is,ie,it,li,lu,mt,nl,no,es,ch,s"
     f"&keywordsEverywhere={job_title.replace(' ', '%20')}"
-    "&positionScheduleCodes=fulltime"
-    "&positionOfferingCodes=NS,directhire"
-    "&publicationPeriod=LAST_WEEK"
-    "&escoIsco=C11,C12,C133,C242,C243,C25,C35"
-    "&requiredLanguages=en(C2)&lang=en"
+    "&positionOfferingCodes=NS,contract,contracttohire,temporary"
+    "&publicationPeriod=LAST_MONTH"
+    "&lang=en"
 )
 
 # Database setup
@@ -145,13 +142,8 @@ def make_api_request(cookie: str, xsrf_token: str, page: int = 1) -> tuple[dict,
         "page": page,
         "sortSearch": "BEST_MATCH",
         "keywords": [{"keyword": job_title, "specificSearchCode": "EVERYWHERE"}],
-        "publicationPeriod": "LAST_WEEK",
-        "occupationUris": [f"http://data.europa.eu/esco/isco/{code}" for code in ["C11", "C12", "C133", "C242", "C243", "C25", "C35"]],
-        "positionScheduleCodes": ["fulltime"],
-        "sectorCodes": ["NS", "j", "k"],
-        "positionOfferingCodes": ["NS", "directhire"],
-        "locationCodes": ["be", "ch", "dk", "fi", "mt", "nl", "no", "se"],
-        "requiredLanguages": [{"isoCode": "en", "level": "C2"}]
+        "publicationPeriod": "LAST_MONTH",
+        "positionOfferingCodes": ["NS", "contract", "contracttohire", "temporary"]
     })
 
     headers = {

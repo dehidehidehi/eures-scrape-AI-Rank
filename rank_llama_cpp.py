@@ -1,4 +1,5 @@
 import json
+import os
 from math import e
 from operator import le
 import re
@@ -34,7 +35,7 @@ def load_config(config_path="config.ini"):
         "sbert_model_name": config.get("Models", "SBERT_MODEL_NAME", fallback="all-MiniLM-L6-v2"),
         "llama_endpoint": config.get("Paths", "LLAMA_ENDPOINT", fallback="http://localhost:8090"),
         "n_predict": config.getint("Settings", "N_PREDICT", fallback=32),
-        "openai_api_key": config.get("API", "OPENAI_API_KEY", fallback=""),
+        "openai_api_key": config.get("API", "OPENAI_API_KEY", fallback=os.environ.get("OPEN_AI_API_KEY", "")),
         "openai_model": config.get("Models", "OPENAI_MODEL", fallback="gemini-2.5-flash"),
         "google_api_key": config.get("API", "OPENAI_API_KEY", fallback=""),
         "google_model": config.get("Models", "OPENAI_MODEL", fallback="gemini-2.5-flash"),

@@ -84,8 +84,8 @@ OPENAI_MODEL=gemma-3-27b-it
 OPENAI_API_KEY=your_openai_api_key
 
 [EXTRA]
-NAME= Your Name
-TARGET= Desired Job Title
+NAME=Your Name
+TARGET=Desired Job Title
 
 ```
 
@@ -96,16 +96,11 @@ TARGET= Desired Job Title
 1. Install Python dependencies:
 
    ```bash
-   pip install -r requirements.txt
+   uv sync
    ```
 
 2. Install ChromeDriver and place it in your PATH.
 
-3. (Optional) Install `uv` if using it for running:
-
-   ```bash
-   pip install uv
-   ```
 
 ---
 
