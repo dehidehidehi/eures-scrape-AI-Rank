@@ -33,12 +33,9 @@ def load_config(config_path="config.ini"):
         "top_n_matches": config.getint("Settings", "TOP_N_MATCHES", fallback=5),
         "final_top_n": config.getint("Settings", "FINAL_TOP_N", fallback=3),
         "sbert_model_name": config.get("Models", "SBERT_MODEL_NAME", fallback="all-MiniLM-L6-v2"),
-        "llama_endpoint": config.get("Paths", "LLAMA_ENDPOINT", fallback="http://localhost:8090"),
         "n_predict": config.getint("Settings", "N_PREDICT", fallback=32),
         "openai_api_key": config.get("API", "OPENAI_API_KEY", fallback=os.environ.get("OPEN_AI_API_KEY", "")),
-        "openai_model": config.get("Models", "OPENAI_MODEL", fallback="gemini-2.5-flash"),
-        "google_api_key": config.get("API", "OPENAI_API_KEY", fallback=""),
-        "google_model": config.get("Models", "OPENAI_MODEL", fallback="gemini-2.5-flash"),
+        "openai_model": config.get("Models", "OPENAI_MODEL"),
         "name": config.get("EXTRA", "NAME", fallback="Your Name"),
     }
 
@@ -111,10 +108,9 @@ def match_resume_to_jobs(resume_text: str, jobs: list, model_name: str, top_n: i
 def openai_prompt(prompt: str, api_key: str, model: str = "gemini-2.5-flash") -> str:
     """Call OpenAI API with a prompt."""
 
-
     client = OpenAI(
         api_key=api_key,
-        base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
+        base_url="https://api.openai.com/v1/chat/completions"
     )
     try:
         response = client.chat.completions.create(
