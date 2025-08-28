@@ -126,11 +126,11 @@ def rerank_with_openai(resume_text: str, jobs: list, api_key: str, model: str):
         job["description"] = BeautifulSoup(job["description"], "html.parser").get_text(strip=True)
         prompt = (
             f"You are a job matching assistant, you match jobs listings with my resume.\n\n"
-            f"I am looking for jobs focused mainly focused around Java and JVM compatible languages."
-            f"I am looking for freelance/contact jobs only."
+            f"I am looking for jobs focused mainly focused around consulting in enterprise environments where Java and JVM compatible languages are used."
+            f"I am looking for consulting/freelance/contact jobs only."
             f"Evaluate how well the job listing fits my preferences."
             f"Return a JSON with the following fields:\n"
-            f"- \"score\": Give -1 if the job is not about programming or certainly is a permanent salaried position. Give a very low score for solely front-end javascript offers. Lower the score if a specific language other than english or french is absolutely mandatory. Lower the score for full-stack positions. Otherwise : give a between 2 and 10 depending on how well the job fits my preferes listed above..\n"
+            f"- \"score\": Give -1 if the job is not in IT (information technology) or certainly is a permanent salaried position. Give a very low score for solely front-end javascript offers. Lower the score if a specific language other than english or french is absolutely mandatory. Otherwise : give a between 2 and 10 depending on how well the job fits my preferes listed above.\n"
             f"- \"justification\": At most 2 sentences explaining the score, focus on freelancing and required skills experience.\n"
             f"- \"contact_person\": Name recruiter in the job description (or null if not found).\n"
             f"- \"contact_email\": Email of the recruiter (or null if not found).\n"
