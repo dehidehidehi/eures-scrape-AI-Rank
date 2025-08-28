@@ -130,8 +130,8 @@ def rerank_with_openai(resume_text: str, jobs: list, api_key: str, model: str):
             f"I am looking for consulting/freelance/contact jobs only."
             f"Evaluate how well the job listing fits my preferences."
             f"Return a JSON with the following fields:\n"
-            f"- \"score\": Give -1 if the job is not in IT (information technology) or certainly is a permanent salaried position. Give a very low score for solely front-end javascript offers. Lower the score if a specific language other than english or french is absolutely mandatory. Otherwise : give a between 2 and 10 depending on how well the job fits my preferes listed above.\n"
-            f"- \"justification\": At most 2 sentences explaining the score, focus on freelancing and required skills experience.\n"
+            f"- \"score\": Give -1 if the job is not in IT (information technology) or certainly is a permanent salaried position or is certainly not a freelancing opporunity. Give a very low score for solely front-end javascript offers. Lower the score if a specific language other than english or french is absolutely mandatory. Heavily the score if the listing is in an enterprise environment but seems to be offering salaried positions. Otherwise : give a between 2 and 10 depending on how well the job fits my preferes listed above.\n"
+            f"- \"justification\": At most 1 sentence explaining the score, focus on freelancing, contract type, and required skills experience.\n"
             f"- \"contact_person\": Name recruiter in the job description (or null if not found).\n"
             f"- \"contact_email\": Email of the recruiter (or null if not found).\n"
             f"- \"job_type\": ON_SITE, HYBRID, or FULLY_REMOTE, (or null if not found).\n"
@@ -166,14 +166,15 @@ def rerank_with_openai(resume_text: str, jobs: list, api_key: str, model: str):
     return reranked
 
 
-def load_matched_jobs_paginated(conn, limit=10, offset=0):
+def load_matched_jobs_paginated(conn, limit=10, offset=0, threshold: float = 0.50):
+    # TODO check minimum match_score, is it negative? If so fix the threshol
     cursor = conn.cursor()
-    cursor.execute("""
+    cursor.execute(f"""
         SELECT jm.id, jm.match_score, j.title, j.description
         FROM job_matched jm
             JOIN jobs j ON jm.id = j.id
             LEFT JOIN jobs_data jd ON jm.id = jd.id
-        WHERE jd.id IS NULL
+        WHERE jd.id IS NULL AND jm.match_score > {threshold}
         ORDER BY jm.match_score DESC
         LIMIT ? OFFSET ?
     """, (limit, offset))
