@@ -1,20 +1,15 @@
+import configparser
 import json
 import os
-from math import e
-from operator import le
-import re
 import sqlite3
-import requests
-from pathlib import Path
-from sentence_transformers import SentenceTransformer
-from sklearn.metrics.pairwise import cosine_similarity
+
 import numpy as np
 from PyPDF2 import PdfReader
-import configparser
-from openai import OpenAI
 from bs4 import BeautifulSoup
-from google import genai
+from openai import OpenAI
 from pydantic import BaseModel
+from sentence_transformers import SentenceTransformer
+from sklearn.metrics.pairwise import cosine_similarity
 
 
 class ResponseStruct(BaseModel):
@@ -34,7 +29,7 @@ def load_config(config_path="config.ini"):
         "final_top_n": config.getint("Settings", "FINAL_TOP_N", fallback=3),
         "sbert_model_name": config.get("Models", "SBERT_MODEL_NAME", fallback="all-MiniLM-L6-v2"),
         "n_predict": config.getint("Settings", "N_PREDICT", fallback=32),
-        "openai_api_key": config.get("API", "OPENAI_API_KEY", fallback=os.environ.get("OPEN_AI_API_KEY", "")),
+        "openai_api_key": config.get("API", "OPENAI_API_KEY", fallback=os.environ.get("OPENAI_API_KEY", "")),
         "openai_model": config.get("Models", "OPENAI_MODEL"),
         "name": config.get("EXTRA", "NAME", fallback="Your Name"),
     }
@@ -105,12 +100,12 @@ def match_resume_to_jobs(resume_text: str, jobs: list, model_name: str, top_n: i
 
 # ----------- RERANKING -----------
 
-def openai_prompt(prompt: str, api_key: str, model: str = "gemini-2.5-flash") -> str:
+def openai_prompt(prompt: str, api_key: str, model: str) -> str:
     """Call OpenAI API with a prompt."""
 
     client = OpenAI(
         api_key=api_key,
-        base_url="https://api.openai.com/v1/chat/completions"
+        base_url="https://api.openai.com/v1"
     )
     try:
         response = client.chat.completions.create(
@@ -131,10 +126,10 @@ def rerank_with_openai(resume_text: str, jobs: list, api_key: str, model: str):
         job["description"] = BeautifulSoup(job["description"], "html.parser").get_text(strip=True)
         prompt = (
             f"You are a job matching assistant, you match jobs listings with my resume.\n\n"
-            f"Given my **resume** and **job description** and the fact I am looking **only** for freelance/contract work within Europe, evaluate how well the resume fits the job. "
+            f"Given my **resume** and **job description** and the fact I am looking **only** for freelance/contract work within Europe, evaluate how well the job listing fits my resume. "
             f"Return a JSON with the following fields:\n"
-            f"- \"score\": A score between 1 and 10 indicating match, give a score of -1 if the job is not about programming. Give a score of 0 is explicitely a salaried position..\n"
-            f"- \"justification\": A brief explanation for the score, focus on skill and experience.\n"
+            f"- \"score\": Give -1 if the job is not about programming. Give 1 if the job is about programming but is a permanant salaried position. Otherwise give score between 2 and 10 matching the job listing to my skills, I am not interested in fullstack positions or front-end web development.\n"
+            f"- \"justification\": At most 2 sentences explaining the score, focus on freelancing and required skills experience.\n"
             f"- \"contact_person\": Name recruiter in the job description (or null if not found).\n"
             f"- \"contact_email\": Email of the recruiter (or null if not found).\n"
             f"- \"job_type\": ON_SITE, HYBRID, or FULLY_REMOTE, (or null if not found).\n"
@@ -174,8 +169,8 @@ def load_matched_jobs_paginated(conn, limit=10, offset=0):
     cursor.execute("""
         SELECT jm.id, jm.match_score, j.title, j.description
         FROM job_matched jm
-        JOIN jobs j ON jm.id = j.id
-        LEFT JOIN jobs_data jd ON jm.id = jd.id
+            JOIN jobs j ON jm.id = j.id
+            LEFT JOIN jobs_data jd ON jm.id = jd.id
         WHERE jd.id IS NULL
         ORDER BY jm.match_score DESC
         LIMIT ? OFFSET ?
@@ -193,26 +188,25 @@ def main():
     conn = sqlite3.connect(config["db_path"])
     cursor = conn.cursor()
 
-    print("[+] Matching resume against jobs using Sentence-BERT with pagination...")
-    offset = 0
-    limit = 10
-
-    while True:
-        unmatched_jobs = load_unmatched_jobs_from_db(config["db_path"], limit=limit, offset=offset)
-
-        if not unmatched_jobs:
-            break
-        print(f"[+] Matching resume against {len(unmatched_jobs)} jobs (offset: {offset})...")
-        matches = match_resume_to_jobs(
-            resume_text, unmatched_jobs, config["sbert_model_name"], config["top_n_matches"]
-        )
-        offset += limit
-        for job in matches:
-            cursor.execute(
-                "INSERT OR REPLACE INTO job_matched (id, match_score) VALUES (?, ?)",
-                (job["id"], job["score"])
-            )
-        conn.commit()
+    # print("[+] Matching resume against jobs using Sentence-BERT with pagination...")
+    # offset = 0
+    # limit = 10
+    # while True:
+    #     unmatched_jobs = load_unmatched_jobs_from_db(config["db_path"], limit=limit, offset=offset)
+    #     if not unmatched_jobs:
+    #         break
+    #
+    #     print(f"[+] Matching resume against {len(unmatched_jobs)} jobs (offset: {offset})...")
+    #     matches = match_resume_to_jobs(
+    #         resume_text, unmatched_jobs, config["sbert_model_name"], config["top_n_matches"]
+    #     )
+    #     offset += limit
+    #     for job in matches:
+    #         cursor.execute(
+    #             "INSERT OR REPLACE INTO job_matched (id, match_score) VALUES (?, ?)",
+    #             (job["id"], job["score"])
+    #         )
+    #     conn.commit()
 
     print("[+] Reranking matched jobs using OpenAI...")
 
@@ -229,14 +223,14 @@ def main():
         for job in reranked_jobs:
             cursor.execute("""
                 INSERT INTO jobs_data (id, creationDate, lastModificationDate, score, openai_score, justification, contact_person, contact_email, draft_email, job_type, employer_location)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(id) DO UPDATE SET
                     openai_score = excluded.openai_score,
                     justification = excluded.justification,
                     contact_person = excluded.contact_person,
                     contact_email = excluded.contact_email,
-                    draft_email = excluded.draft_email
-                    job_type = excluded.job_type
+                    draft_email = excluded.draft_email,
+                    job_type = excluded.job_type,
                     employer_location = excluded.employer_location
             """, (job["id"], job.get("creationDate", ""), job.get("lastModificationDate", ""), job.get("score", 0), job["openai_score"], job["justification"], job["contact_person"], job["contact_email"], job["draft_email"], job["job_type"], job["employer_location"]))
             conn.commit()
